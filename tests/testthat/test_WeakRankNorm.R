@@ -1,0 +1,12 @@
+test_that("Normalized weak ranking loss is implemented correctly",{
+y<-c(-3, 10.3,-8, 12, 14,-0.5, 29,-1.1,-5.7, 119)
+yhat<-c(0.02, 0.6, 0.1, 0.47, 0.82, 0.04, 0.77, 0.09, 0.01, 0.79)
+expect_equal(WeakRankNorm(4)@risk(y,yhat),0.25)
+expect_equal(WeakRankNorm(5)@risk(y,yhat),0)
+expect_error(WeakRankNorm(-0.4)@risk(c(1,2,3),c(1,2,3)))
+expect_error(WeakRankNorm(-4)@risk(c(1,2,3),c(1,2,3)))
+expect_error(WeakRankNorm(2)@risk(c(1,2,3,4),c(1,2,3)))
+expect_error(WeakRankNorm(6)@risk(c(1,2,3),c(1,2,3)))
+expect_warning(WeakRankNorm(3)@risk(c(2,3,1),c(1,2,3)))
+expect_equal(WeakRankNorm(3)@risk(c(2,3,1),c(1,2,3)),0)
+})

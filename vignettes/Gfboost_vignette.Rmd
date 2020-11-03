@@ -1,0 +1,184 @@
+---
+title: "gfboost_vignette"
+output: rmarkdown::html_vignette
+bibliography: Biblio.bib
+vignette: >
+  %\VignetteIndexEntry{gfboost_vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(gfboost)
+```
+
+The *gfboost* package extends the *mboost* package (@mboost, @hofner14, @hothorn10, @bu07, @hofner15, @hothorn06) as it provides an implementation of a so-called ''gradient-free Gradient Boosting'' algorithm that allows for the application of Boosting to non-differentiable and non-convex loss functions as well as a modified, loss-based Stability Selection variant (@TWphd, @TW19c). The motivation behind this type of Boosting algorithm is the application of Boosting to ranking problems which suffer from complicated, non-continuous loss functions. \
+
+
+# Preliminaries 
+
+## Assumptions
+
+We assume that our training set is given by a data matrix $\mathcal{D}^{train} \in \mathbb{R}^{n \times (p+1)}$ where $n$ is the number of observations and $p$ is the number of predictors, i.e., our data matrix can be written as $\mathcal{D}^{train}=(X^{train},Y^{train})$ for the regressor matrix $X^{train} \in \mathbb{R}^{n \times p}$ and the response vector $Y^{train} \in \mathbb{R}^n$. 
+
+The relation between the response and the regressors can be described by some map $f: \mathbb{R}^p \mapsto \mathbb{R}$ in the sense that $y=f(x)+\epsilon$ for some error term $\epsilon$ with mean zero and variance $\sigma^2 \in ]0,\infty[$. 
+
+The goal is to approximate $f$ by a sparse and stable model where ''stable'' refers to the property that the set of selected predictors does only change insignificantly on similar data. 
+
+
+## Boosting families
+
+Our package uses the *family* objects from the package *mboost* to define new loss functions. We refer to *mboost* (@mboost) for more details. For our applications, we allow for non-differentiable loss functions like ranking losses, i.e., losses that do not provide a gradient, leaving the *ngradient* argument of the *family* objects empty. We provide some specific losses for ranking problems. As a simple example, we demonstrate the family *Rank()*:
+```{r eval=TRUE}
+y<-c(-3, 10.3,-8, 12, 14,-0.5, 29,-1.1,-5.7, 119)
+yhat<-c(0.02, 0.6, 0.1, 0.47, 0.82, 0.04, 0.77, 0.09, 0.01, 0.79)
+Rank()@risk(y,yhat)
+```
+The *Rank* family implements the hard ranking loss (@clem08) which compares the ordering of the two inserted vectors. More precisely, it sums up all misrankings, i.e., all pairs $(i,j)$ where $Y_i$ is higher/lower than $Y_j$ but where $\hat Y_i$ is lower/higher than $\hat Y_j$. At the end, this sum is standardized such that a hard ranking loss of 0 indicates that there are no misrankings while a hard ranking loss of, say, 0.5, indicates that in the half of all such possible pairs a misranking occurs. We provide further families for the so-called localized and weak ranking loss (@clem08b), including a normalized variant for the latter. 
+
+For more details about ranking problems, see @clem08 or @TW19b as well as references therein. \
+
+
+# Gradient-free Gradient Boosting
+
+In this section, we describe our gradient-free Gradient Boosting algorithm SingBoost which is based on $L_2-$Boosting and allows for loss functions that do not provide a gradient. We further show how to get coefficient paths for the variables and describe an aggregation procedure for SingBoost. \
+
+
+## SingBoost
+
+The main function of this package is the *singboost* function which is based on *glmboost* (@mboost). In this version of the package, we restricted ourselves to linear regression base learners. \
+
+The usage of *singboost* is very similar to that of *glmboost*. The main difference is that SingBoost includes so-called ''singular iterations''. In contrast to the gradient descent step executed in standard Boosting algorithms where the baselearner that fits the current negative gradient vector best, the singular iterations correspond to a secant step, i.e., the least-squares baselearner that fits the current residuals, evaluated in the (possibly complicated) loss function, best is taken. Therefore, *singboost* allows for loss functions that do not provide a (unique) gradient, so even a family object that has an empty *ngradient* argument can be inserted as the *family* argument of the *singboost* function. 
+
+The motivation behind these singular iterations comes from a measure-theoretical perspective in the sense that the selection frequencies can be regarded as a ''column measure'' (cf. @TW19c). Clearly, different loss functions lead to different column measures and potentially to different sets of selected variables, i.e., the columns that are relevant for our target loss function, maybe a ranking loss, and which are not selected by some $L-$Boosting for another loss function $L$, may be identified with a ''singular part''  of column measures (cf. @TW19c). We always use $L_2-$Boosting (@bu03, @bu06) as reference Boosting model. Nevertheless, we assume that $L_2-$Boosting already selects relevant variables which would make a Boosting algorithm only containing singular iterations and therefore being computationally quite expensive unnecessary. Therefore, SingBoost alternates between singular iterations and standard $L_2-$Boosting iterations where the frequency of the singular iterations can be set by the parameter *M*, i.e., every $M-$th iteration is a singular iteration. For the sake of a wide applicability, we do not exclude standard (i.e., differentiable) loss functions. **Note that our implementation contains an additional *LS* argument indicating whether singular iterations are gradient- or secant-based, requiring to be set to TRUE if a non-differentiable loss function is used.** 
+
+The further input arguments are the number of iterations $m_{iter}$ (*miter*), the learning rate $\kappa$ (*kap*) and the data set $\mathcal{D}$ (*D*). It is important to note that the inserted data set **must not contain an intercept column** since this column will be added automatically internally in *singboost*. If one does not want an intercept coefficient, one has to center the data beforehand. Furthermore, **the last column must contain the response variable**, so *singboost* always treats the last column as the response column and all other columns as regressor columns. Since a *formula* argument cannot be inserted, one has to generate the model matrix first if basic functions, interaction terms or categorical variables are included. For the particular case of localized ranking losses, the argument *best* controls how large the proportion of the best instances is. 
+
+Consider the following simple example: 
+```{r eval=TRUE}
+glmres<-glmboost(Sepal.Length~.,iris)
+glmres
+attributes(varimp(glmres))$self
+attributes(varimp(glmres))$var
+firis<-as.formula(Sepal.Length~.)
+Xiris<-model.matrix(firis,iris)
+Diris<-data.frame(Xiris[,-1],iris$Sepal.Length)
+colnames(Diris)[6]<-"Y"
+coef(glmboost(Xiris,iris$Sepal.Length))
+singboost(Diris)
+singboost(Diris,LS=TRUE)
+```
+
+The application to the *iris* data set should demonstrate that $L_2-$Boosting is a special instance of our SingBoost algorithm (@TW19c). More precisely, using the squared loss function, our SingBoost algorithm results in exactly the same model and coefficients, provided that the hyperparameters are identical. We did not specify them explicitly in the example, but the number of iterations in *singboost* is $m_{iter}=100$ per default and the learning rate is $\kappa=0.1$, mimicking the default setting for these parameters for $L_2-$Boosting in *mboost* (@mboost). Note that we did not explicitly insert a Boosting family. Per default, *singboost* uses *Gaussian()* which corresponds to standard $L_2-$Boosting. The *LS* argument indicates that we indeed perform so-called singular iterations. Clearly, for the squared loss function, both results are the same since $L_2-$Boosting with least-squares baselearners implicitly also takes the best baselearner in the sense that it fits the current residuals best, evaluated in the squared loss (and which is implemented however much more sophisticatedly in *mboost* by using correlation updates), see e.g. @zhao04, @zhao07. For clarity, we manually renamed the response variable *Sepal.Length* as *Y* in advance in the previous example (which is not necessary). *singboost* reports the selected variables, the coefficients and the selection frequencies, i.e., the relative number of iterations where a particular predictor has been selected. Note that *singboost* does not report the offset and the intercept separately.
+
+*singboost* of course also allows for categorical variables, interaction terms etc.. See the following example:
+
+```{r eval=TRUE}
+glmres2<-glmboost(Sepal.Length~Petal.Length+Sepal.Width:Species,iris)
+finter<-as.formula(Sepal.Length~Petal.Length+Sepal.Width:Species-1)
+Xinter<-model.matrix(finter,iris)
+Dinter<-data.frame(Xinter,iris$Sepal.Length)
+singboost(Dinter)
+coef(glmres2)
+```
+
+The example above shows how to deal with interaction terms. In fact, instead of inserting a *formula* argument as input for *singboost*, build the model matrix (without the intercept column) and enter this matrix as input argument. The same procedure is valid for categorical variables or basis functions. Note that we did not yet implement a group structure, i.e., we always treat all columns separately and do not perform block-wise updates as suggested in @tutz11a.
+
+We now demonstrate how to apply SingBoost for quantile regression and hard ranking regression:
+```{r eval=TRUE}
+glmquant<-glmboost(Sepal.Length~.,iris,family=QuantReg(tau=0.75))
+coef(glmquant)
+attributes(varimp(glmquant))$self
+singboost(Diris,singfamily=QuantReg(tau=0.75),LS=TRUE)
+singboost(Diris,singfamily=QuantReg(tau=0.75),LS=TRUE,M=2)
+singboost(Diris,singfamily=Rank(),LS=TRUE)
+```
+The last simulation has the argument *M=2* which indicates that we alternate between singular and $L_2-$Boosting iterations where the second simulation uses the default *M=10*. 
+
+More details concerning the implementation of the SingBoost algorithm can be found in @TWphd. \
+
+## Coefficient paths
+
+If coefficient paths have to be drawn, use the *path.singboost* function followed by the *singboost.plot* function instead of the *singboost* function since only *path.singboost* also saves the intercept and coefficients paths. In the *singboost.plot* function, $M$ and $m_{iter}$ have to be inserted again:
+```{r eval=TRUE}
+singpath<-path.singboost(Diris)
+singboost.plot(singpath,10,100)
+```
+
+## Column Measure Boosting (CMB)
+
+CMB intends to aggregate SingBoost models that have been fitted on subsamples of the training data. The main motivation behind this idea is that SingBoost is expected to detect relevant variables for the respective (complicated) loss function that $L_2-$Boosting would not select. From a measure-theoretical perspective, these columns may be identified with a ''singular part'' (cf. @TW19c). In order to propose the opportunity to study this singular part for specific loss functions, we provide the CMB procedure that aggregates SingBoost models in order to get a more ''stable'' singular part. **Note that the CMB procedure does not replace a Stability Selection**. Furthermore, if one is only interested in getting a suitable stable model, **we recommend to only use a Stability Selection without the CMB procedure by setting *Bsing=1* and *nsing=ncmb* ** when using the *CMB3S* function (see below) for the sake of computational costs. 
+
+The main idea is to draw $B^{sing}$ (*Bsing*) subsamples with $n_{sing}$ (*nsing*) rows from the training set and to compute the *singboost* model on each. Then, the models are aggregated where different aggregation procedures can be used, i.e., either a simple average (*weights1*) or a weighted average based on the reciprocal of the out-of-sample loss (*weights2*) computed on the complement of the current subsample.
+
+Let us however provide an example for CMB:
+```{r eval=TRUE}
+set.seed(19931023)
+cmb1<-CMB(Diris,nsing=100,Bsing=50,alpha=0.8,singfam=Rank(),
+evalfam=Rank(),sing=TRUE,M=10,m_iter=100,
+kap=0.1,LS=TRUE,wagg='weights1',robagg=FALSE,lower=0)
+cmb1
+```
+In this example, we apply SingBoost with the hard ranking loss (inserted through *singfam=Rank()*) to $B^{sing}=50$ subsamples with $n_{sing}=100$ rows from the *iris* data set each. After computing the SingBoost models, their out-of-sample performance is evaluated based on the complement of the subsample used for training (and thus always contains 50 observations) using again the hard ranking loss (inserted through *evalfam=Rank()*). The parameter *alpha=0.8* indicates that we only use the best 80\% (i.e., the best 40) of the SingBoost models for aggregation and *wagg='weights1'* leads to a simple average of the selection frequencies. Finally, the aggregated selection frequencies (which form an empirical aggregated ''column measure'') are reported as well as the selected variables. The last part of the output, the empirical aggregated ''row measure'', reports the ''selection frequencies'' for the rows. This is not trivial since these frequencies are not just the relative numbers of occurences of the respective rows in the training sets due to the partitioning but also contain information about the ''quality'' of the instances since the relative numbers of occurences in the training sets corresponding to the **best** models are computed. \
+
+
+# A loss-based Stability Selection
+
+$L_2-$Boosting is known to suffer from overfitting. This drawback is not limited to $L_2-$Boosting, but also affects the Lasso, other Boosting models and therefore also SingBoost. Usually, one applies the Stability Selection from @bu10 (for Lasso and its variants) resp. from @hofner15 (for Boosting models) by computing the models on subsamples of the training set and by selecting a set of stable variables according to some threshold. Motivated by the fact that our SingBoost essentially combines $L_2-$Boosting and a secant step according to some other target loss function, we propose a Stability Selection that is based on the performance of the models on some validation set, evaluated in this target loss function. 
+
+The main issue concerning the standard Stability Selection is that two of three parameters (number of variables per model, PFER and threshold) have to be inserted in the function *stabsel* available in the package *stabs* (@stabs). However, since the recommendations for these parameters do not necessarily need to hold for SingBoost models, our idea is to define a grid of thresholds or a grid of cardinalities (number of variables in the final (stable) model). Then, we compute SingBoost models on $B$ subsamples with $n_{cmb}$ (*ncmb*) rows from the training set and average the selection frequencies. Now, having a grid of thresholds (indicated by setting *gridtype='pigrid'*), we compute the stable model for each threshold by taking the variables whose aggregated selection frequencies are at least as high as the threshold and evaluate their performances on a validation set according to our target loss function. To this end, we either compute SingBoost or least squares coefficients on the reduced data set which only contains the regressor columns corresponding to the stable variables. The stable model with the best validation performance (and with it, implicitly the optimal threshold) is finally reported. **Note that the main issue that we learned when working with thresholds is that once the signal to noise ratio is rather low, it frequently happens that no variable passes the threshold which leads to an empty model**, see @TWphd. Since we never think of an empty model as a reasonable model, we propose to alternatively define a grid of numbers of variables in the final model such that for each number, say $q$ (not to confuse with the $q$ in Hofner's Stability Selection where this variable indicates the number of variables selected in **each** Boosting model), the $q$ variables with the highest aggregated selection frequencies enter the stable model (using this type of grid is indicated by setting *gridtype='qgrid'*). The selection of the best model and therefore, the optimal number of variables, is again based on the validation performance. 
+
+**Note that although our Stability Selection requires the arguments *nsing* and *Bsing*, one can easily use it without the CMB aggregation procedure by specifying $n_{sing}=n_{cmb}$ and $B^{sing}=1$.** This is important if one wants to compare our Stability Selection directly with the Stability Selection of @hofner15. 
+
+On the other hand, the aggregation paradigms that we already mentioned in the CMB subsection can be directly applied when aggregating the SingBoost models for the Stability Selection. Per default, our *CMB3S* function averages the selection frequencies across the models. If a weighted aggregation or the aggregation of only the best models is desired, set $n_{train}=n_{cmb}$, $B=1$, $B^{sing}>1$ and $n_{sing}<n_{cmb}$. Effectively, $B^{sing}$ subsamples with $n_{sing}$ observations each are drawn from the training set, but the aggregation schemes that we mentioned above are available through the arguments *alpha* and *wagg*. 
+
+Let us now consider the following illustrative example:
+```{r eval=TRUE}
+set.seed(19931023)
+ind<-sample(1:150,120,replace=FALSE)
+Dtrain<-Diris[ind,]
+Dvalid<-Diris[-ind,]
+set.seed(19931023)
+cmb3s1<-CMB3S(Dtrain,nsing=80,Dvalid=Dvalid,ncmb=80,Bsing=1,B=100,alpha=0.5,singfam=Gaussian(),
+evalfam=Gaussian(),sing=FALSE,M=10,m_iter=100,kap=0.1,LS=FALSE,wagg='weights1',gridtype='pigrid',
+grid=seq(0.8,0.9,1),robagg=FALSE,lower=0,singcoef=TRUE,Mfinal=10)
+cmb3s1$Fin
+cmb3s1$Stab
+```
+We ran the *CMB3S* function where CMB-3S is the acronym for ''Column Measure Boosting with SingBoost and Stability Selection''. We divided the data set into a training set and a validation set. From the training set containing 120 instances, we draw $B=100$ times a subsample containing $n_{cmb}=80$ instances. On each subsample, we compute the $L_2-$Boosting model (since *singfam=Gaussian()*). Having aggregated the SingBoost selection frequencies and the overall CMB selection frequencies, the 30 instances that were not contained in the initial training set form the validation set for the Stability Selection. We used a grid of thresholds since *gridtype='pigrid'* and used the thresholds 0.8, 0.9 and 1 (inserted as the *grid* argument), so for each threshold, the stable model is computed as well as its performance on the validation set. To this end, the required coefficients are computed by SingBoost (since *singcoef=TRUE*) where each 10-th iteration is a singular iteration (due to *Mfinal=10*) according to the squared loss (since *singfam=Gaussian()*). The validation loss is also the squared loss since *evalfam=Gaussian()*. The *CMB3S* function outputs the aggregated selection frequencies for each variable as well as the finally selected stable variables. Note that only *Sepal.Width* and *Petal.Length* are selected since only these two variables pass the optimal threshold. 
+
+Alternatively, one can run the same simulation with a grid of cardinalities by just changing the input arguments *gridtype* and *grid*:
+
+```{r eval=TRUE}
+set.seed(19931023)
+ind<-sample(1:150,120,replace=FALSE)
+Dtrain<-Diris[ind,]
+Dvalid<-Diris[-ind,]
+set.seed(19931023)
+cmb3s2<-CMB3S(Dtrain,nsing=80,Dvalid=Dvalid,ncmb=80,Bsing=1,B=100,alpha=0.5,singfam=Gaussian(),
+evalfam=Gaussian(),sing=FALSE,M=10,m_iter=100,kap=0.1,LS=FALSE,wagg='weights1',gridtype='qgrid',
+grid=seq(1,2,3),robagg=FALSE,lower=0,singcoef=TRUE,Mfinal=10)
+cmb3s2$Fin
+cmb3s2$Stab
+```
+
+One can see that the optimal number of final variables turned out to be 2, so the stable predictor set is the same as in the previous example. 
+
+Optionally, we also implemented a function *CV.CMB3S* which takes into account that the initial data set is randomly divided into a training and a validation set. Therefore, the CV.CMB-3S procedure cross-validates the Stability Selection itself by using multiple partitions of the initial data set. The main reason to use this function is to compare the performance of our stable models against some competitor models, so the initial data set is not only partitioned into training and validation sets but also a test set is drawn such that theese three sets form a partition of the initial data set. The cross-validated Stability Selection reports the cross-validated loss, evaluated in the target loss function (inserted through *targetfam*). **We strongly recommend to parallelize the cross-validated Stability Selection due to huge comptuational costs**. \
+
+
+# References
+
+\bibliography{Biblio}
+\bibliographystyle{abbrv}
+
+
+
+

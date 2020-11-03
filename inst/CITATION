@@ -1,0 +1,20 @@
+citHeader("To cite package gfboost in publications use:")
+
+citEntry(entry="PhDThesis",
+  title = "Gradient-Free Gradient Boosting.",
+  author = personList(as.person("Tino Werner")),
+  language = "English",
+  year = 2020,
+  school= "Carl von Ossietzky University Oldenburg",
+  type="Dissertation",
+  uri = "https://oops.uni-oldenburg.de/id/eprint/4290",
+  textVersion  =
+  paste("Tino Werner (2020).",
+        "Gradient-Free Gradient Boosting.", 
+        "PhD Thesis, Carl von Ossietzky University Oldenburg",
+	    "URL https://oops.uni-oldenburg.de/id/eprint/4290")
+)
+
+
+					
+					

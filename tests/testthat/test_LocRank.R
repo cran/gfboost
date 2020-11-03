@@ -1,0 +1,12 @@
+test_that("Localized ranking loss is implemented correctly",{
+y<-c(-3, 10.3,-8, 12, 14,-0.5, 29,-1.1,-5.7, 119)
+yhat<-c(0.02, 0.6, 0.1, 0.47, 0.82, 0.04, 0.77, 0.09, 0.01, 0.79)
+expect_equal(LocRank(4)@risk(y,yhat),75*37/46/225)
+expect_equal(LocRank(5)@risk(y,yhat),18/195)
+expect_error(LocRank(-0.4)@risk(c(1,2,3),c(1,2,3)))
+expect_error(LocRank(-4)@risk(c(1,2,3),c(1,2,3)))
+expect_error(LocRank(2)@risk(c(1,2,3,4),c(1,2,3)))
+expect_error(LocRank(6)@risk(c(1,2,3),c(1,2,3)))
+expect_warning(LocRank(3)@risk(c(2,3,1),c(1,2,3)))
+expect_equal(LocRank(10)@risk(y,yhat),8/45)
+})

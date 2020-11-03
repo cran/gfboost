@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>gfboost_vignette</title>
+
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">gfboost_vignette</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(gfboost)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="co">#&gt; Loading required package: mvtnorm</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="co">#&gt; Loading required package: pcaPP</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="co">#&gt; Loading required package: mboost</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="co">#&gt; Loading required package: parallel</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="co">#&gt; Loading required package: stabs</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="co">#&gt; This is mboost 2.9-3. See &#39;package?mboost&#39; and &#39;news(package  = &quot;mboost&quot;)&#39;</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="co">#&gt; for a complete list of changes.</span></span></code></pre></div>
+<p>The <em>gfboost</em> package extends the <em>mboost</em> package (<span class="citation">Hothorn et al. (2017)</span>, <span class="citation">Hofner et al. (2014)</span>, <span class="citation">Hothorn et al. (2010)</span>, <span class="citation">Bühlmann and Hothorn (2007)</span>, <span class="citation">Hofner, Boccuto, and Göker (2015)</span>, <span class="citation">Hothorn and Bühlmann (2006)</span>) as it provides an implementation of a so-called ‘’gradient-free Gradient Boosting’’ algorithm that allows for the application of Boosting to non-differentiable and non-convex loss functions as well as a modified, loss-based Stability Selection variant (<span class="citation">Werner (2019b)</span>, <span class="citation">Werner and Ruckdeschel (2019)</span>). The motivation behind this type of Boosting algorithm is the application of Boosting to ranking problems which suffer from complicated, non-continuous loss functions.<br />
+</p>
+<div id="preliminaries" class="section level1">
+<h1>Preliminaries</h1>
+<div id="assumptions" class="section level2">
+<h2>Assumptions</h2>
+<p>We assume that our training set is given by a data matrix <span class="math inline">\(\mathcal{D}^{train} \in \mathbb{R}^{n \times (p+1)}\)</span> where <span class="math inline">\(n\)</span> is the number of observations and <span class="math inline">\(p\)</span> is the number of predictors, i.e., our data matrix can be written as <span class="math inline">\(\mathcal{D}^{train}=(X^{train},Y^{train})\)</span> for the regressor matrix <span class="math inline">\(X^{train} \in \mathbb{R}^{n \times p}\)</span> and the response vector <span class="math inline">\(Y^{train} \in \mathbb{R}^n\)</span>.</p>
+<p>The relation between the response and the regressors can be described by some map <span class="math inline">\(f: \mathbb{R}^p \mapsto \mathbb{R}\)</span> in the sense that <span class="math inline">\(y=f(x)+\epsilon\)</span> for some error term <span class="math inline">\(\epsilon\)</span> with mean zero and variance <span class="math inline">\(\sigma^2 \in ]0,\infty[\)</span>.</p>
+<p>The goal is to approximate <span class="math inline">\(f\)</span> by a sparse and stable model where ‘’stable’’ refers to the property that the set of selected predictors does only change insignificantly on similar data.</p>
+</div>
+<div id="boosting-families" class="section level2">
+<h2>Boosting families</h2>
+<p>Our package uses the <em>family</em> objects from the package <em>mboost</em> to define new loss functions. We refer to <em>mboost</em> (<span class="citation">Hothorn et al. (2017)</span>) for more details. For our applications, we allow for non-differentiable loss functions like ranking losses, i.e., losses that do not provide a gradient, leaving the <em>ngradient</em> argument of the <em>family</em> objects empty. We provide some specific losses for ranking problems. As a simple example, we demonstrate the family <em>Rank()</em>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>y&lt;-<span class="kw">c</span>(<span class="op">-</span><span class="dv">3</span>, <span class="fl">10.3</span>,<span class="op">-</span><span class="dv">8</span>, <span class="dv">12</span>, <span class="dv">14</span>,<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">29</span>,<span class="op">-</span><span class="fl">1.1</span>,<span class="op">-</span><span class="fl">5.7</span>, <span class="dv">119</span>)</span>
+<span id="cb2-2"><a href="#cb2-2"></a>yhat&lt;-<span class="kw">c</span>(<span class="fl">0.02</span>, <span class="fl">0.6</span>, <span class="fl">0.1</span>, <span class="fl">0.47</span>, <span class="fl">0.82</span>, <span class="fl">0.04</span>, <span class="fl">0.77</span>, <span class="fl">0.09</span>, <span class="fl">0.01</span>, <span class="fl">0.79</span>)</span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="kw">Rank</span>()<span class="op">@</span><span class="kw">risk</span>(y,yhat)</span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; [1] 0.1777778</span></span></code></pre></div>
+<p>The <em>Rank</em> family implements the hard ranking loss (<span class="citation">Clémençon, Lugosi, and Vayatis (2008)</span>) which compares the ordering of the two inserted vectors. More precisely, it sums up all misrankings, i.e., all pairs <span class="math inline">\((i,j)\)</span> where <span class="math inline">\(Y_i\)</span> is higher/lower than <span class="math inline">\(Y_j\)</span> but where <span class="math inline">\(\hat Y_i\)</span> is lower/higher than <span class="math inline">\(\hat Y_j\)</span>. At the end, this sum is standardized such that a hard ranking loss of 0 indicates that there are no misrankings while a hard ranking loss of, say, 0.5, indicates that in the half of all such possible pairs a misranking occurs. We provide further families for the so-called localized and weak ranking loss (<span class="citation">Clémençon and Vayatis (2007)</span>), including a normalized variant for the latter.</p>
+<p>For more details about ranking problems, see <span class="citation">Clémençon, Lugosi, and Vayatis (2008)</span> or <span class="citation">Werner (2019a)</span> as well as references therein.<br />
+</p>
+</div>
+</div>
+<div id="gradient-free-gradient-boosting" class="section level1">
+<h1>Gradient-free Gradient Boosting</h1>
+<p>In this section, we describe our gradient-free Gradient Boosting algorithm SingBoost which is based on <span class="math inline">\(L_2-\)</span>Boosting and allows for loss functions that do not provide a gradient. We further show how to get coefficient paths for the variables and describe an aggregation procedure for SingBoost.<br />
+</p>
+<div id="singboost" class="section level2">
+<h2>SingBoost</h2>
+<p>The main function of this package is the <em>singboost</em> function which is based on <em>glmboost</em> (<span class="citation">Hothorn et al. (2017)</span>). In this version of the package, we restricted ourselves to linear regression base learners.<br />
+</p>
+<p>The usage of <em>singboost</em> is very similar to that of <em>glmboost</em>. The main difference is that SingBoost includes so-called ‘’singular iterations’’. In contrast to the gradient descent step executed in standard Boosting algorithms where the baselearner that fits the current negative gradient vector best, the singular iterations correspond to a secant step, i.e., the least-squares baselearner that fits the current residuals, evaluated in the (possibly complicated) loss function, best is taken. Therefore, <em>singboost</em> allows for loss functions that do not provide a (unique) gradient, so even a family object that has an empty <em>ngradient</em> argument can be inserted as the <em>family</em> argument of the <em>singboost</em> function.</p>
+<p>The motivation behind these singular iterations comes from a measure-theoretical perspective in the sense that the selection frequencies can be regarded as a ‘’column measure’’ (cf. <span class="citation">Werner and Ruckdeschel (2019)</span>). Clearly, different loss functions lead to different column measures and potentially to different sets of selected variables, i.e., the columns that are relevant for our target loss function, maybe a ranking loss, and which are not selected by some <span class="math inline">\(L-\)</span>Boosting for another loss function <span class="math inline">\(L\)</span>, may be identified with a ‘’singular part’’ of column measures (cf. <span class="citation">Werner and Ruckdeschel (2019)</span>). We always use <span class="math inline">\(L_2-\)</span>Boosting (<span class="citation">Bühlmann and Yu (2003)</span>, <span class="citation">Bühlmann (2006)</span>) as reference Boosting model. Nevertheless, we assume that <span class="math inline">\(L_2-\)</span>Boosting already selects relevant variables which would make a Boosting algorithm only containing singular iterations and therefore being computationally quite expensive unnecessary. Therefore, SingBoost alternates between singular iterations and standard <span class="math inline">\(L_2-\)</span>Boosting iterations where the frequency of the singular iterations can be set by the parameter <em>M</em>, i.e., every <span class="math inline">\(M-\)</span>th iteration is a singular iteration. For the sake of a wide applicability, we do not exclude standard (i.e., differentiable) loss functions. <strong>Note that our implementation contains an additional <em>LS</em> argument indicating whether singular iterations are gradient- or secant-based, requiring to be set to TRUE if a non-differentiable loss function is used.</strong></p>
+<p>The further input arguments are the number of iterations <span class="math inline">\(m_{iter}\)</span> (<em>miter</em>), the learning rate <span class="math inline">\(\kappa\)</span> (<em>kap</em>) and the data set <span class="math inline">\(\mathcal{D}\)</span> (<em>D</em>). It is important to note that the inserted data set <strong>must not contain an intercept column</strong> since this column will be added automatically internally in <em>singboost</em>. If one does not want an intercept coefficient, one has to center the data beforehand. Furthermore, <strong>the last column must contain the response variable</strong>, so <em>singboost</em> always treats the last column as the response column and all other columns as regressor columns. Since a <em>formula</em> argument cannot be inserted, one has to generate the model matrix first if basic functions, interaction terms or categorical variables are included. For the particular case of localized ranking losses, the argument <em>best</em> controls how large the proportion of the best instances is.</p>
+<p>Consider the following simple example:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>glmres&lt;-<span class="kw">glmboost</span>(Sepal.Length<span class="op">~</span>.,iris)</span>
+<span id="cb3-2"><a href="#cb3-2"></a>glmres</span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="co">#&gt; </span></span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="co">#&gt;   Generalized Linear Models Fitted via Gradient Boosting</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt; </span></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="co">#&gt; glmboost.formula(formula = Sepal.Length ~ ., data = iris)</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="co">#&gt; </span></span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="co">#&gt; </span></span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt;   Squared Error (Regression) </span></span>
+<span id="cb3-11"><a href="#cb3-11"></a><span class="co">#&gt; </span></span>
+<span id="cb3-12"><a href="#cb3-12"></a><span class="co">#&gt; Loss function: (y - f)^2 </span></span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="co">#&gt;  </span></span>
+<span id="cb3-14"><a href="#cb3-14"></a><span class="co">#&gt; </span></span>
+<span id="cb3-15"><a href="#cb3-15"></a><span class="co">#&gt; Number of boosting iterations: mstop = 100 </span></span>
+<span id="cb3-16"><a href="#cb3-16"></a><span class="co">#&gt; Step size:  0.1 </span></span>
+<span id="cb3-17"><a href="#cb3-17"></a><span class="co">#&gt; Offset:  5.843333 </span></span>
+<span id="cb3-18"><a href="#cb3-18"></a><span class="co">#&gt; </span></span>
+<span id="cb3-19"><a href="#cb3-19"></a><span class="co">#&gt; Coefficients: </span></span>
+<span id="cb3-20"><a href="#cb3-20"></a><span class="co">#&gt;      (Intercept)      Sepal.Width     Petal.Length Speciesvirginica </span></span>
+<span id="cb3-21"><a href="#cb3-21"></a><span class="co">#&gt;      -3.36560001       0.53639026       0.46090783      -0.01924627 </span></span>
+<span id="cb3-22"><a href="#cb3-22"></a><span class="co">#&gt; attr(,&quot;offset&quot;)</span></span>
+<span id="cb3-23"><a href="#cb3-23"></a><span class="co">#&gt; [1] 5.843333</span></span>
+<span id="cb3-24"><a href="#cb3-24"></a><span class="kw">attributes</span>(<span class="kw">varimp</span>(glmres))<span class="op">$</span>self</span>
+<span id="cb3-25"><a href="#cb3-25"></a><span class="co">#&gt; [1] 0.00 0.38 0.57 0.00 0.00 0.05</span></span>
+<span id="cb3-26"><a href="#cb3-26"></a><span class="kw">attributes</span>(<span class="kw">varimp</span>(glmres))<span class="op">$</span>var</span>
+<span id="cb3-27"><a href="#cb3-27"></a><span class="co">#&gt; [1] (Intercept)       Sepal.Width       Petal.Length      Petal.Width      </span></span>
+<span id="cb3-28"><a href="#cb3-28"></a><span class="co">#&gt; [5] Speciesversicolor Speciesvirginica </span></span>
+<span id="cb3-29"><a href="#cb3-29"></a><span class="co">#&gt; 6 Levels: (Intercept) &lt; Petal.Width &lt; ... &lt; Petal.Length</span></span>
+<span id="cb3-30"><a href="#cb3-30"></a>firis&lt;-<span class="kw">as.formula</span>(Sepal.Length<span class="op">~</span>.)</span>
+<span id="cb3-31"><a href="#cb3-31"></a>Xiris&lt;-<span class="kw">model.matrix</span>(firis,iris)</span>
+<span id="cb3-32"><a href="#cb3-32"></a>Diris&lt;-<span class="kw">data.frame</span>(Xiris[,<span class="op">-</span><span class="dv">1</span>],iris<span class="op">$</span>Sepal.Length)</span>
+<span id="cb3-33"><a href="#cb3-33"></a><span class="kw">colnames</span>(Diris)[<span class="dv">6</span>]&lt;-<span class="st">&quot;Y&quot;</span></span>
+<span id="cb3-34"><a href="#cb3-34"></a><span class="kw">coef</span>(<span class="kw">glmboost</span>(Xiris,iris<span class="op">$</span>Sepal.Length))</span>
+<span id="cb3-35"><a href="#cb3-35"></a><span class="co">#&gt;      (Intercept)      Sepal.Width     Petal.Length Speciesvirginica </span></span>
+<span id="cb3-36"><a href="#cb3-36"></a><span class="co">#&gt;      -3.36560001       0.53639026       0.46090783      -0.01924627 </span></span>
+<span id="cb3-37"><a href="#cb3-37"></a><span class="co">#&gt; attr(,&quot;offset&quot;)</span></span>
+<span id="cb3-38"><a href="#cb3-38"></a><span class="co">#&gt; [1] 5.843333</span></span>
+<span id="cb3-39"><a href="#cb3-39"></a><span class="kw">singboost</span>(Diris)</span>
+<span id="cb3-40"><a href="#cb3-40"></a><span class="co">#&gt; $`Selected variables`</span></span>
+<span id="cb3-41"><a href="#cb3-41"></a><span class="co">#&gt; [1] &quot;Petal.Length&gt;=Sepal.Width&gt;=Speciesvirginica&quot;</span></span>
+<span id="cb3-42"><a href="#cb3-42"></a><span class="co">#&gt; </span></span>
+<span id="cb3-43"><a href="#cb3-43"></a><span class="co">#&gt; $Coefficients</span></span>
+<span id="cb3-44"><a href="#cb3-44"></a><span class="co">#&gt; [1]  2.47773332  0.53639026  0.46090783  0.00000000  0.00000000 -0.01924627</span></span>
+<span id="cb3-45"><a href="#cb3-45"></a><span class="co">#&gt; </span></span>
+<span id="cb3-46"><a href="#cb3-46"></a><span class="co">#&gt; $Freqs</span></span>
+<span id="cb3-47"><a href="#cb3-47"></a><span class="co">#&gt; [1] 0.00 0.38 0.57 0.00 0.00 0.05</span></span>
+<span id="cb3-48"><a href="#cb3-48"></a><span class="co">#&gt; </span></span>
+<span id="cb3-49"><a href="#cb3-49"></a><span class="co">#&gt; $VarCoef</span></span>
+<span id="cb3-50"><a href="#cb3-50"></a><span class="co">#&gt;        Intercept      Sepal.Width     Petal.Length Speciesvirginica </span></span>
+<span id="cb3-51"><a href="#cb3-51"></a><span class="co">#&gt;       2.47773332       0.53639026       0.46090783      -0.01924627</span></span>
+<span id="cb3-52"><a href="#cb3-52"></a><span class="kw">singboost</span>(Diris,<span class="dt">LS=</span><span class="ot">TRUE</span>)</span>
+<span id="cb3-53"><a href="#cb3-53"></a><span class="co">#&gt; $`Selected variables`</span></span>
+<span id="cb3-54"><a href="#cb3-54"></a><span class="co">#&gt; [1] &quot;Petal.Length&gt;=Sepal.Width&gt;=Speciesvirginica&quot;</span></span>
+<span id="cb3-55"><a href="#cb3-55"></a><span class="co">#&gt; </span></span>
+<span id="cb3-56"><a href="#cb3-56"></a><span class="co">#&gt; $Coefficients</span></span>
+<span id="cb3-57"><a href="#cb3-57"></a><span class="co">#&gt; [1]  2.47773332  0.53639026  0.46090783  0.00000000  0.00000000 -0.01924627</span></span>
+<span id="cb3-58"><a href="#cb3-58"></a><span class="co">#&gt; </span></span>
+<span id="cb3-59"><a href="#cb3-59"></a><span class="co">#&gt; $Freqs</span></span>
+<span id="cb3-60"><a href="#cb3-60"></a><span class="co">#&gt; [1] 0.00 0.38 0.57 0.00 0.00 0.05</span></span>
+<span id="cb3-61"><a href="#cb3-61"></a><span class="co">#&gt; </span></span>
+<span id="cb3-62"><a href="#cb3-62"></a><span class="co">#&gt; $VarCoef</span></span>
+<span id="cb3-63"><a href="#cb3-63"></a><span class="co">#&gt;        Intercept      Sepal.Width     Petal.Length Speciesvirginica </span></span>
+<span id="cb3-64"><a href="#cb3-64"></a><span class="co">#&gt;       2.47773332       0.53639026       0.46090783      -0.01924627</span></span></code></pre></div>
+<p>The application to the <em>iris</em> data set should demonstrate that <span class="math inline">\(L_2-\)</span>Boosting is a special instance of our SingBoost algorithm (<span class="citation">Werner and Ruckdeschel (2019)</span>). More precisely, using the squared loss function, our SingBoost algorithm results in exactly the same model and coefficients, provided that the hyperparameters are identical. We did not specify them explicitly in the example, but the number of iterations in <em>singboost</em> is <span class="math inline">\(m_{iter}=100\)</span> per default and the learning rate is <span class="math inline">\(\kappa=0.1\)</span>, mimicking the default setting for these parameters for <span class="math inline">\(L_2-\)</span>Boosting in <em>mboost</em> (<span class="citation">Hothorn et al. (2017)</span>). Note that we did not explicitly insert a Boosting family. Per default, <em>singboost</em> uses <em>Gaussian()</em> which corresponds to standard <span class="math inline">\(L_2-\)</span>Boosting. The <em>LS</em> argument indicates that we indeed perform so-called singular iterations. Clearly, for the squared loss function, both results are the same since <span class="math inline">\(L_2-\)</span>Boosting with least-squares baselearners implicitly also takes the best baselearner in the sense that it fits the current residuals best, evaluated in the squared loss (and which is implemented however much more sophisticatedly in <em>mboost</em> by using correlation updates), see e.g. <span class="citation">Zhao and Yu (2004)</span>, <span class="citation">Zhao and Yu (2007)</span>. For clarity, we manually renamed the response variable <em>Sepal.Length</em> as <em>Y</em> in advance in the previous example (which is not necessary). <em>singboost</em> reports the selected variables, the coefficients and the selection frequencies, i.e., the relative number of iterations where a particular predictor has been selected. Note that <em>singboost</em> does not report the offset and the intercept separately.</p>
+<p><em>singboost</em> of course also allows for categorical variables, interaction terms etc.. See the following example:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>glmres2&lt;-<span class="kw">glmboost</span>(Sepal.Length<span class="op">~</span>Petal.Length<span class="op">+</span>Sepal.Width<span class="op">:</span>Species,iris)</span>
+<span id="cb4-2"><a href="#cb4-2"></a>finter&lt;-<span class="kw">as.formula</span>(Sepal.Length<span class="op">~</span>Petal.Length<span class="op">+</span>Sepal.Width<span class="op">:</span>Species<span class="dv">-1</span>)</span>
+<span id="cb4-3"><a href="#cb4-3"></a>Xinter&lt;-<span class="kw">model.matrix</span>(finter,iris)</span>
+<span id="cb4-4"><a href="#cb4-4"></a>Dinter&lt;-<span class="kw">data.frame</span>(Xinter,iris<span class="op">$</span>Sepal.Length)</span>
+<span id="cb4-5"><a href="#cb4-5"></a><span class="kw">singboost</span>(Dinter)</span>
+<span id="cb4-6"><a href="#cb4-6"></a><span class="co">#&gt; $`Selected variables`</span></span>
+<span id="cb4-7"><a href="#cb4-7"></a><span class="co">#&gt; [1] &quot;Petal.Length&gt;=Sepal.Width.Speciessetosa&gt;=Sepal.Width.Speciesvirginica&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8"></a><span class="co">#&gt; </span></span>
+<span id="cb4-9"><a href="#cb4-9"></a><span class="co">#&gt; $Coefficients</span></span>
+<span id="cb4-10"><a href="#cb4-10"></a><span class="co">#&gt; [1] 4.00831289 0.45662497 0.08896750 0.00000000 0.01751541</span></span>
+<span id="cb4-11"><a href="#cb4-11"></a><span class="co">#&gt; </span></span>
+<span id="cb4-12"><a href="#cb4-12"></a><span class="co">#&gt; $Freqs</span></span>
+<span id="cb4-13"><a href="#cb4-13"></a><span class="co">#&gt; [1] 0.00 0.60 0.36 0.00 0.04</span></span>
+<span id="cb4-14"><a href="#cb4-14"></a><span class="co">#&gt; </span></span>
+<span id="cb4-15"><a href="#cb4-15"></a><span class="co">#&gt; $VarCoef</span></span>
+<span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt;                    Intercept                 Petal.Length </span></span>
+<span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt;                   4.00831289                   0.45662497 </span></span>
+<span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt;    Sepal.Width.Speciessetosa Sepal.Width.Speciesvirginica </span></span>
+<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt;                   0.08896750                   0.01751541</span></span>
+<span id="cb4-20"><a href="#cb4-20"></a><span class="kw">coef</span>(glmres2)</span>
+<span id="cb4-21"><a href="#cb4-21"></a><span class="co">#&gt;                  (Intercept)                 Petal.Length </span></span>
+<span id="cb4-22"><a href="#cb4-22"></a><span class="co">#&gt;                  -1.83502045                   0.45662497 </span></span>
+<span id="cb4-23"><a href="#cb4-23"></a><span class="co">#&gt;    Sepal.Width:Speciessetosa Sepal.Width:Speciesvirginica </span></span>
+<span id="cb4-24"><a href="#cb4-24"></a><span class="co">#&gt;                   0.08896750                   0.01751541 </span></span>
+<span id="cb4-25"><a href="#cb4-25"></a><span class="co">#&gt; attr(,&quot;offset&quot;)</span></span>
+<span id="cb4-26"><a href="#cb4-26"></a><span class="co">#&gt; [1] 5.843333</span></span></code></pre></div>
+<p>The example above shows how to deal with interaction terms. In fact, instead of inserting a <em>formula</em> argument as input for <em>singboost</em>, build the model matrix (without the intercept column) and enter this matrix as input argument. The same procedure is valid for categorical variables or basis functions. Note that we did not yet implement a group structure, i.e., we always treat all columns separately and do not perform block-wise updates as suggested in <span class="citation">Gertheiss et al. (2011)</span>.</p>
+<p>We now demonstrate how to apply SingBoost for quantile regression and hard ranking regression:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>glmquant&lt;-<span class="kw">glmboost</span>(Sepal.Length<span class="op">~</span>.,iris,<span class="dt">family=</span><span class="kw">QuantReg</span>(<span class="dt">tau=</span><span class="fl">0.75</span>))</span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="kw">coef</span>(glmquant)</span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="co">#&gt;  (Intercept)  Sepal.Width Petal.Length </span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="co">#&gt;   -3.1274211    0.5191849    0.4756341 </span></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="co">#&gt; attr(,&quot;offset&quot;)</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="co">#&gt; 50% </span></span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="co">#&gt; 5.8</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a><span class="kw">attributes</span>(<span class="kw">varimp</span>(glmquant))<span class="op">$</span>self</span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="co">#&gt; [1] 0.24 0.27 0.49 0.00 0.00 0.00</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a><span class="kw">singboost</span>(Diris,<span class="dt">singfamily=</span><span class="kw">QuantReg</span>(<span class="dt">tau=</span><span class="fl">0.75</span>),<span class="dt">LS=</span><span class="ot">TRUE</span>)</span>
+<span id="cb5-11"><a href="#cb5-11"></a><span class="co">#&gt; $`Selected variables`</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a><span class="co">#&gt; [1] &quot;Petal.Length&gt;=Sepal.Width&gt;=Speciesvirginica&quot;</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a><span class="co">#&gt; </span></span>
+<span id="cb5-14"><a href="#cb5-14"></a><span class="co">#&gt; $Coefficients</span></span>
+<span id="cb5-15"><a href="#cb5-15"></a><span class="co">#&gt; [1]  2.47836568  0.53612658  0.46095525  0.00000000  0.00000000 -0.01925953</span></span>
+<span id="cb5-16"><a href="#cb5-16"></a><span class="co">#&gt; </span></span>
+<span id="cb5-17"><a href="#cb5-17"></a><span class="co">#&gt; $Freqs</span></span>
+<span id="cb5-18"><a href="#cb5-18"></a><span class="co">#&gt; [1] 0.00 0.38 0.57 0.00 0.00 0.05</span></span>
+<span id="cb5-19"><a href="#cb5-19"></a><span class="co">#&gt; </span></span>
+<span id="cb5-20"><a href="#cb5-20"></a><span class="co">#&gt; $VarCoef</span></span>
+<span id="cb5-21"><a href="#cb5-21"></a><span class="co">#&gt;        Intercept      Sepal.Width     Petal.Length Speciesvirginica </span></span>
+<span id="cb5-22"><a href="#cb5-22"></a><span class="co">#&gt;       2.47836568       0.53612658       0.46095525      -0.01925953</span></span>
+<span id="cb5-23"><a href="#cb5-23"></a><span class="kw">singboost</span>(Diris,<span class="dt">singfamily=</span><span class="kw">QuantReg</span>(<span class="dt">tau=</span><span class="fl">0.75</span>),<span class="dt">LS=</span><span class="ot">TRUE</span>,<span class="dt">M=</span><span class="dv">2</span>)</span>
+<span id="cb5-24"><a href="#cb5-24"></a><span class="co">#&gt; $`Selected variables`</span></span>
+<span id="cb5-25"><a href="#cb5-25"></a><span class="co">#&gt; [1] &quot;Petal.Length&gt;=Sepal.Width&gt;=Speciesvirginica&quot;</span></span>
+<span id="cb5-26"><a href="#cb5-26"></a><span class="co">#&gt; </span></span>
+<span id="cb5-27"><a href="#cb5-27"></a><span class="co">#&gt; $Coefficients</span></span>
+<span id="cb5-28"><a href="#cb5-28"></a><span class="co">#&gt; [1]  2.44900980  0.54702733  0.45925162  0.00000000  0.00000000 -0.01196688</span></span>
+<span id="cb5-29"><a href="#cb5-29"></a><span class="co">#&gt; </span></span>
+<span id="cb5-30"><a href="#cb5-30"></a><span class="co">#&gt; $Freqs</span></span>
+<span id="cb5-31"><a href="#cb5-31"></a><span class="co">#&gt; [1] 0.00 0.42 0.55 0.00 0.00 0.03</span></span>
+<span id="cb5-32"><a href="#cb5-32"></a><span class="co">#&gt; </span></span>
+<span id="cb5-33"><a href="#cb5-33"></a><span class="co">#&gt; $VarCoef</span></span>
+<span id="cb5-34"><a href="#cb5-34"></a><span class="co">#&gt;        Intercept      Sepal.Width     Petal.Length Speciesvirginica </span></span>
+<span id="cb5-35"><a href="#cb5-35"></a><span class="co">#&gt;       2.44900980       0.54702733       0.45925162      -0.01196688</span></span>
+<span id="cb5-36"><a href="#cb5-36"></a><span class="kw">singboost</span>(Diris,<span class="dt">singfamily=</span><span class="kw">Rank</span>(),<span class="dt">LS=</span><span class="ot">TRUE</span>)</span>
+<span id="cb5-37"><a href="#cb5-37"></a><span class="co">#&gt; $`Selected variables`</span></span>
+<span id="cb5-38"><a href="#cb5-38"></a><span class="co">#&gt; [1] &quot;Petal.Length&gt;=Sepal.Width&gt;=Speciesvirginica&gt;=Speciesversicolor&quot;</span></span>
+<span id="cb5-39"><a href="#cb5-39"></a><span class="co">#&gt; </span></span>
+<span id="cb5-40"><a href="#cb5-40"></a><span class="co">#&gt; $Coefficients</span></span>
+<span id="cb5-41"><a href="#cb5-41"></a><span class="co">#&gt; [1]  2.485989684  0.534163798  0.460436981  0.000000000  0.000344599</span></span>
+<span id="cb5-42"><a href="#cb5-42"></a><span class="co">#&gt; [6] -0.018630537</span></span>
+<span id="cb5-43"><a href="#cb5-43"></a><span class="co">#&gt; </span></span>
+<span id="cb5-44"><a href="#cb5-44"></a><span class="co">#&gt; $Freqs</span></span>
+<span id="cb5-45"><a href="#cb5-45"></a><span class="co">#&gt; [1] 0.00 0.38 0.56 0.00 0.01 0.05</span></span>
+<span id="cb5-46"><a href="#cb5-46"></a><span class="co">#&gt; </span></span>
+<span id="cb5-47"><a href="#cb5-47"></a><span class="co">#&gt; $VarCoef</span></span>
+<span id="cb5-48"><a href="#cb5-48"></a><span class="co">#&gt;         Intercept       Sepal.Width      Petal.Length Speciesversicolor </span></span>
+<span id="cb5-49"><a href="#cb5-49"></a><span class="co">#&gt;       2.485989684       0.534163798       0.460436981       0.000344599 </span></span>
+<span id="cb5-50"><a href="#cb5-50"></a><span class="co">#&gt;  Speciesvirginica </span></span>
+<span id="cb5-51"><a href="#cb5-51"></a><span class="co">#&gt;      -0.018630537</span></span></code></pre></div>
+<p>The last simulation has the argument <em>M=2</em> which indicates that we alternate between singular and <span class="math inline">\(L_2-\)</span>Boosting iterations where the second simulation uses the default <em>M=10</em>.</p>
+<p>More details concerning the implementation of the SingBoost algorithm can be found in <span class="citation">Werner (2019b)</span>.<br />
+</p>
+</div>
+<div id="coefficient-paths" class="section level2">
+<h2>Coefficient paths</h2>
+<p>If coefficient paths have to be drawn, use the <em>path.singboost</em> function followed by the <em>singboost.plot</em> function instead of the <em>singboost</em> function since only <em>path.singboost</em> also saves the intercept and coefficients paths. In the <em>singboost.plot</em> function, <span class="math inline">\(M\)</span> and <span class="math inline">\(m_{iter}\)</span> have to be inserted again:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>singpath&lt;-<span class="kw">path.singboost</span>(Diris)</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">singboost.plot</span>(singpath,<span class="dv">10</span>,<span class="dv">100</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="column-measure-boosting-cmb" class="section level2">
+<h2>Column Measure Boosting (CMB)</h2>
+<p>CMB intends to aggregate SingBoost models that have been fitted on subsamples of the training data. The main motivation behind this idea is that SingBoost is expected to detect relevant variables for the respective (complicated) loss function that <span class="math inline">\(L_2-\)</span>Boosting would not select. From a measure-theoretical perspective, these columns may be identified with a ‘’singular part’’ (cf. <span class="citation">Werner and Ruckdeschel (2019)</span>). In order to propose the opportunity to study this singular part for specific loss functions, we provide the CMB procedure that aggregates SingBoost models in order to get a more ‘’stable’’ singular part. <strong>Note that the CMB procedure does not replace a Stability Selection</strong>. Furthermore, if one is only interested in getting a suitable stable model, <strong>we recommend to only use a Stability Selection without the CMB procedure by setting <em>Bsing=1</em> and <em>nsing=ncmb</em> </strong> when using the <em>CMB3S</em> function (see below) for the sake of computational costs.</p>
+<p>The main idea is to draw <span class="math inline">\(B^{sing}\)</span> (<em>Bsing</em>) subsamples with <span class="math inline">\(n_{sing}\)</span> (<em>nsing</em>) rows from the training set and to compute the <em>singboost</em> model on each. Then, the models are aggregated where different aggregation procedures can be used, i.e., either a simple average (<em>weights1</em>) or a weighted average based on the reciprocal of the out-of-sample loss (<em>weights2</em>) computed on the complement of the current subsample.</p>
+<p>Let us however provide an example for CMB:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">set.seed</span>(<span class="dv">19931023</span>)</span>
+<span id="cb7-2"><a href="#cb7-2"></a>cmb1&lt;-<span class="kw">CMB</span>(Diris,<span class="dt">nsing=</span><span class="dv">100</span>,<span class="dt">Bsing=</span><span class="dv">50</span>,<span class="dt">alpha=</span><span class="fl">0.8</span>,<span class="dt">singfam=</span><span class="kw">Rank</span>(),</span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="dt">evalfam=</span><span class="kw">Rank</span>(),<span class="dt">sing=</span><span class="ot">TRUE</span>,<span class="dt">M=</span><span class="dv">10</span>,<span class="dt">m_iter=</span><span class="dv">100</span>,</span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="dt">kap=</span><span class="fl">0.1</span>,<span class="dt">LS=</span><span class="ot">TRUE</span>,<span class="dt">wagg=</span><span class="st">&#39;weights1&#39;</span>,<span class="dt">robagg=</span><span class="ot">FALSE</span>,<span class="dt">lower=</span><span class="dv">0</span>)</span>
+<span id="cb7-5"><a href="#cb7-5"></a>cmb1</span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="co">#&gt; $`Column measure`</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a><span class="co">#&gt; [1] 0.000 1.000 1.000 0.325 0.500 0.775</span></span>
+<span id="cb7-8"><a href="#cb7-8"></a><span class="co">#&gt; </span></span>
+<span id="cb7-9"><a href="#cb7-9"></a><span class="co">#&gt; $`Selected variables`</span></span>
+<span id="cb7-10"><a href="#cb7-10"></a><span class="co">#&gt; [1] &quot;Sepal.Width&gt;=Petal.Length&gt;=Speciesvirginica&gt;=Speciesversicolor&gt;=Petal.Width&quot;</span></span>
+<span id="cb7-11"><a href="#cb7-11"></a><span class="co">#&gt; </span></span>
+<span id="cb7-12"><a href="#cb7-12"></a><span class="co">#&gt; $`Variable names`</span></span>
+<span id="cb7-13"><a href="#cb7-13"></a><span class="co">#&gt; [1] &quot;Intercept&quot;         &quot;Sepal.Width&quot;       &quot;Petal.Length&quot;     </span></span>
+<span id="cb7-14"><a href="#cb7-14"></a><span class="co">#&gt; [4] &quot;Petal.Width&quot;       &quot;Speciesversicolor&quot; &quot;Speciesvirginica&quot; </span></span>
+<span id="cb7-15"><a href="#cb7-15"></a><span class="co">#&gt; [7] &quot;Y&quot;                </span></span>
+<span id="cb7-16"><a href="#cb7-16"></a><span class="co">#&gt; </span></span>
+<span id="cb7-17"><a href="#cb7-17"></a><span class="co">#&gt; $`Row measure`</span></span>
+<span id="cb7-18"><a href="#cb7-18"></a><span class="co">#&gt;   [1] 0.725 0.650 0.600 0.650 0.750 0.650 0.775 0.700 0.600 0.500 0.725 0.725</span></span>
+<span id="cb7-19"><a href="#cb7-19"></a><span class="co">#&gt;  [13] 0.675 0.650 0.675 0.700 0.725 0.600 0.575 0.600 0.625 0.750 0.650 0.675</span></span>
+<span id="cb7-20"><a href="#cb7-20"></a><span class="co">#&gt;  [25] 0.650 0.650 0.750 0.625 0.625 0.650 0.675 0.700 0.700 0.725 0.600 0.600</span></span>
+<span id="cb7-21"><a href="#cb7-21"></a><span class="co">#&gt;  [37] 0.550 0.675 0.625 0.725 0.700 0.675 0.625 0.600 0.650 0.650 0.650 0.675</span></span>
+<span id="cb7-22"><a href="#cb7-22"></a><span class="co">#&gt;  [49] 0.825 0.525 0.525 0.750 0.625 0.600 0.625 0.750 0.600 0.700 0.700 0.625</span></span>
+<span id="cb7-23"><a href="#cb7-23"></a><span class="co">#&gt;  [61] 0.575 0.675 0.625 0.475 0.775 0.600 0.725 0.700 0.675 0.550 0.575 0.700</span></span>
+<span id="cb7-24"><a href="#cb7-24"></a><span class="co">#&gt;  [73] 0.600 0.700 0.775 0.625 0.700 0.700 0.525 0.700 0.800 0.700 0.650 0.625</span></span>
+<span id="cb7-25"><a href="#cb7-25"></a><span class="co">#&gt;  [85] 0.650 0.825 0.675 0.725 0.675 0.675 0.800 0.775 0.675 0.650 0.700 0.725</span></span>
+<span id="cb7-26"><a href="#cb7-26"></a><span class="co">#&gt;  [97] 0.400 0.700 0.775 0.775 0.750 0.625 0.700 0.650 0.650 0.675 0.725 0.725</span></span>
+<span id="cb7-27"><a href="#cb7-27"></a><span class="co">#&gt; [109] 0.700 0.700 0.625 0.650 0.675 0.600 0.650 0.650 0.525 0.650 0.650 0.650</span></span>
+<span id="cb7-28"><a href="#cb7-28"></a><span class="co">#&gt; [121] 0.625 0.700 0.600 0.625 0.575 0.675 0.750 0.700 0.700 0.575 0.700 0.650</span></span>
+<span id="cb7-29"><a href="#cb7-29"></a><span class="co">#&gt; [133] 0.725 0.725 0.700 0.725 0.775 0.700 0.725 0.650 0.725 0.700 0.750 0.525</span></span>
+<span id="cb7-30"><a href="#cb7-30"></a><span class="co">#&gt; [145] 0.650 0.625 0.725 0.650 0.600 0.725</span></span></code></pre></div>
+<p>In this example, we apply SingBoost with the hard ranking loss (inserted through <em>singfam=Rank()</em>) to <span class="math inline">\(B^{sing}=50\)</span> subsamples with <span class="math inline">\(n_{sing}=100\)</span> rows from the <em>iris</em> data set each. After computing the SingBoost models, their out-of-sample performance is evaluated based on the complement of the subsample used for training (and thus always contains 50 observations) using again the hard ranking loss (inserted through <em>evalfam=Rank()</em>). The parameter <em>alpha=0.8</em> indicates that we only use the best 80% (i.e., the best 40) of the SingBoost models for aggregation and <em>wagg=‘weights1’</em> leads to a simple average of the selection frequencies. Finally, the aggregated selection frequencies (which form an empirical aggregated ‘’column measure’‘) are reported as well as the selected variables. The last part of the output, the empirical aggregated’‘row measure’‘, reports the’‘selection frequencies’’ for the rows. This is not trivial since these frequencies are not just the relative numbers of occurences of the respective rows in the training sets due to the partitioning but also contain information about the ‘’quality’’ of the instances since the relative numbers of occurences in the training sets corresponding to the <strong>best</strong> models are computed.<br />
+</p>
+</div>
+</div>
+<div id="a-loss-based-stability-selection" class="section level1">
+<h1>A loss-based Stability Selection</h1>
+<p><span class="math inline">\(L_2-\)</span>Boosting is known to suffer from overfitting. This drawback is not limited to <span class="math inline">\(L_2-\)</span>Boosting, but also affects the Lasso, other Boosting models and therefore also SingBoost. Usually, one applies the Stability Selection from <span class="citation">Meinshausen and Bühlmann (2010)</span> (for Lasso and its variants) resp. from <span class="citation">Hofner, Boccuto, and Göker (2015)</span> (for Boosting models) by computing the models on subsamples of the training set and by selecting a set of stable variables according to some threshold. Motivated by the fact that our SingBoost essentially combines <span class="math inline">\(L_2-\)</span>Boosting and a secant step according to some other target loss function, we propose a Stability Selection that is based on the performance of the models on some validation set, evaluated in this target loss function.</p>
+<p>The main issue concerning the standard Stability Selection is that two of three parameters (number of variables per model, PFER and threshold) have to be inserted in the function <em>stabsel</em> available in the package <em>stabs</em> (<span class="citation">Hofner and Hothorn (2017)</span>). However, since the recommendations for these parameters do not necessarily need to hold for SingBoost models, our idea is to define a grid of thresholds or a grid of cardinalities (number of variables in the final (stable) model). Then, we compute SingBoost models on <span class="math inline">\(B\)</span> subsamples with <span class="math inline">\(n_{cmb}\)</span> (<em>ncmb</em>) rows from the training set and average the selection frequencies. Now, having a grid of thresholds (indicated by setting <em>gridtype=‘pigrid’</em>), we compute the stable model for each threshold by taking the variables whose aggregated selection frequencies are at least as high as the threshold and evaluate their performances on a validation set according to our target loss function. To this end, we either compute SingBoost or least squares coefficients on the reduced data set which only contains the regressor columns corresponding to the stable variables. The stable model with the best validation performance (and with it, implicitly the optimal threshold) is finally reported. <strong>Note that the main issue that we learned when working with thresholds is that once the signal to noise ratio is rather low, it frequently happens that no variable passes the threshold which leads to an empty model</strong>, see <span class="citation">Werner (2019b)</span>. Since we never think of an empty model as a reasonable model, we propose to alternatively define a grid of numbers of variables in the final model such that for each number, say <span class="math inline">\(q\)</span> (not to confuse with the <span class="math inline">\(q\)</span> in Hofner’s Stability Selection where this variable indicates the number of variables selected in <strong>each</strong> Boosting model), the <span class="math inline">\(q\)</span> variables with the highest aggregated selection frequencies enter the stable model (using this type of grid is indicated by setting <em>gridtype=‘qgrid’</em>). The selection of the best model and therefore, the optimal number of variables, is again based on the validation performance.</p>
+<p><strong>Note that although our Stability Selection requires the arguments <em>nsing</em> and <em>Bsing</em>, one can easily use it without the CMB aggregation procedure by specifying <span class="math inline">\(n_{sing}=n_{cmb}\)</span> and <span class="math inline">\(B^{sing}=1\)</span>.</strong> This is important if one wants to compare our Stability Selection directly with the Stability Selection of <span class="citation">Hofner, Boccuto, and Göker (2015)</span>.</p>
+<p>On the other hand, the aggregation paradigms that we already mentioned in the CMB subsection can be directly applied when aggregating the SingBoost models for the Stability Selection. Per default, our <em>CMB3S</em> function averages the selection frequencies across the models. If a weighted aggregation or the aggregation of only the best models is desired, set <span class="math inline">\(n_{train}=n_{cmb}\)</span>, <span class="math inline">\(B=1\)</span>, <span class="math inline">\(B^{sing}&gt;1\)</span> and <span class="math inline">\(n_{sing}&lt;n_{cmb}\)</span>. Effectively, <span class="math inline">\(B^{sing}\)</span> subsamples with <span class="math inline">\(n_{sing}\)</span> observations each are drawn from the training set, but the aggregation schemes that we mentioned above are available through the arguments <em>alpha</em> and <em>wagg</em>.</p>
+<p>Let us now consider the following illustrative example:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">set.seed</span>(<span class="dv">19931023</span>)</span>
+<span id="cb8-2"><a href="#cb8-2"></a>ind&lt;-<span class="kw">sample</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">150</span>,<span class="dv">120</span>,<span class="dt">replace=</span><span class="ot">FALSE</span>)</span>
+<span id="cb8-3"><a href="#cb8-3"></a>Dtrain&lt;-Diris[ind,]</span>
+<span id="cb8-4"><a href="#cb8-4"></a>Dvalid&lt;-Diris[<span class="op">-</span>ind,]</span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="kw">set.seed</span>(<span class="dv">19931023</span>)</span>
+<span id="cb8-6"><a href="#cb8-6"></a>cmb3s1&lt;-<span class="kw">CMB3S</span>(Dtrain,<span class="dt">nsing=</span><span class="dv">80</span>,<span class="dt">Dvalid=</span>Dvalid,<span class="dt">ncmb=</span><span class="dv">80</span>,<span class="dt">Bsing=</span><span class="dv">1</span>,<span class="dt">B=</span><span class="dv">100</span>,<span class="dt">alpha=</span><span class="fl">0.5</span>,<span class="dt">singfam=</span><span class="kw">Gaussian</span>(),</span>
+<span id="cb8-7"><a href="#cb8-7"></a><span class="dt">evalfam=</span><span class="kw">Gaussian</span>(),<span class="dt">sing=</span><span class="ot">FALSE</span>,<span class="dt">M=</span><span class="dv">10</span>,<span class="dt">m_iter=</span><span class="dv">100</span>,<span class="dt">kap=</span><span class="fl">0.1</span>,<span class="dt">LS=</span><span class="ot">FALSE</span>,<span class="dt">wagg=</span><span class="st">&#39;weights1&#39;</span>,<span class="dt">gridtype=</span><span class="st">&#39;pigrid&#39;</span>,</span>
+<span id="cb8-8"><a href="#cb8-8"></a><span class="dt">grid=</span><span class="kw">seq</span>(<span class="fl">0.8</span>,<span class="fl">0.9</span>,<span class="dv">1</span>),<span class="dt">robagg=</span><span class="ot">FALSE</span>,<span class="dt">lower=</span><span class="dv">0</span>,<span class="dt">singcoef=</span><span class="ot">TRUE</span>,<span class="dt">Mfinal=</span><span class="dv">10</span>)</span>
+<span id="cb8-9"><a href="#cb8-9"></a>cmb3s1<span class="op">$</span>Fin</span>
+<span id="cb8-10"><a href="#cb8-10"></a><span class="co">#&gt;    Intercept  Sepal.Width Petal.Length </span></span>
+<span id="cb8-11"><a href="#cb8-11"></a><span class="co">#&gt;    2.2572372    0.5979883    0.4636778</span></span>
+<span id="cb8-12"><a href="#cb8-12"></a>cmb3s1<span class="op">$</span>Stab</span>
+<span id="cb8-13"><a href="#cb8-13"></a><span class="co">#&gt; [1] 0.00 1.00 1.00 0.22 0.41 0.52</span></span></code></pre></div>
+<p>We ran the <em>CMB3S</em> function where CMB-3S is the acronym for ‘’Column Measure Boosting with SingBoost and Stability Selection’’. We divided the data set into a training set and a validation set. From the training set containing 120 instances, we draw <span class="math inline">\(B=100\)</span> times a subsample containing <span class="math inline">\(n_{cmb}=80\)</span> instances. On each subsample, we compute the <span class="math inline">\(L_2-\)</span>Boosting model (since <em>singfam=Gaussian()</em>). Having aggregated the SingBoost selection frequencies and the overall CMB selection frequencies, the 30 instances that were not contained in the initial training set form the validation set for the Stability Selection. We used a grid of thresholds since <em>gridtype=‘pigrid’</em> and used the thresholds 0.8, 0.9 and 1 (inserted as the <em>grid</em> argument), so for each threshold, the stable model is computed as well as its performance on the validation set. To this end, the required coefficients are computed by SingBoost (since <em>singcoef=TRUE</em>) where each 10-th iteration is a singular iteration (due to <em>Mfinal=10</em>) according to the squared loss (since <em>singfam=Gaussian()</em>). The validation loss is also the squared loss since <em>evalfam=Gaussian()</em>. The <em>CMB3S</em> function outputs the aggregated selection frequencies for each variable as well as the finally selected stable variables. Note that only <em>Sepal.Width</em> and <em>Petal.Length</em> are selected since only these two variables pass the optimal threshold.</p>
+<p>Alternatively, one can run the same simulation with a grid of cardinalities by just changing the input arguments <em>gridtype</em> and <em>grid</em>:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">set.seed</span>(<span class="dv">19931023</span>)</span>
+<span id="cb9-2"><a href="#cb9-2"></a>ind&lt;-<span class="kw">sample</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">150</span>,<span class="dv">120</span>,<span class="dt">replace=</span><span class="ot">FALSE</span>)</span>
+<span id="cb9-3"><a href="#cb9-3"></a>Dtrain&lt;-Diris[ind,]</span>
+<span id="cb9-4"><a href="#cb9-4"></a>Dvalid&lt;-Diris[<span class="op">-</span>ind,]</span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="kw">set.seed</span>(<span class="dv">19931023</span>)</span>
+<span id="cb9-6"><a href="#cb9-6"></a>cmb3s2&lt;-<span class="kw">CMB3S</span>(Dtrain,<span class="dt">nsing=</span><span class="dv">80</span>,<span class="dt">Dvalid=</span>Dvalid,<span class="dt">ncmb=</span><span class="dv">80</span>,<span class="dt">Bsing=</span><span class="dv">1</span>,<span class="dt">B=</span><span class="dv">100</span>,<span class="dt">alpha=</span><span class="fl">0.5</span>,<span class="dt">singfam=</span><span class="kw">Gaussian</span>(),</span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="dt">evalfam=</span><span class="kw">Gaussian</span>(),<span class="dt">sing=</span><span class="ot">FALSE</span>,<span class="dt">M=</span><span class="dv">10</span>,<span class="dt">m_iter=</span><span class="dv">100</span>,<span class="dt">kap=</span><span class="fl">0.1</span>,<span class="dt">LS=</span><span class="ot">FALSE</span>,<span class="dt">wagg=</span><span class="st">&#39;weights1&#39;</span>,<span class="dt">gridtype=</span><span class="st">&#39;qgrid&#39;</span>,</span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="dt">grid=</span><span class="kw">seq</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>),<span class="dt">robagg=</span><span class="ot">FALSE</span>,<span class="dt">lower=</span><span class="dv">0</span>,<span class="dt">singcoef=</span><span class="ot">TRUE</span>,<span class="dt">Mfinal=</span><span class="dv">10</span>)</span>
+<span id="cb9-9"><a href="#cb9-9"></a>cmb3s2<span class="op">$</span>Fin</span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="co">#&gt;    Intercept  Sepal.Width Petal.Length </span></span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="co">#&gt;    2.2572372    0.5979883    0.4636778</span></span>
+<span id="cb9-12"><a href="#cb9-12"></a>cmb3s2<span class="op">$</span>Stab</span>
+<span id="cb9-13"><a href="#cb9-13"></a><span class="co">#&gt; [1] 0.00 1.00 1.00 0.22 0.41 0.52</span></span></code></pre></div>
+<p>One can see that the optimal number of final variables turned out to be 2, so the stable predictor set is the same as in the previous example.</p>
+<p>Optionally, we also implemented a function <em>CV.CMB3S</em> which takes into account that the initial data set is randomly divided into a training and a validation set. Therefore, the CV.CMB-3S procedure cross-validates the Stability Selection itself by using multiple partitions of the initial data set. The main reason to use this function is to compare the performance of our stable models against some competitor models, so the initial data set is not only partitioned into training and validation sets but also a test set is drawn such that theese three sets form a partition of the initial data set. The cross-validated Stability Selection reports the cross-validated loss, evaluated in the target loss function (inserted through <em>targetfam</em>). <strong>We strongly recommend to parallelize the cross-validated Stability Selection due to huge comptuational costs</strong>.<br />
+</p>
+</div>
+<div id="references" class="section level1">
+<h1>References</h1>
+
+<div id="refs" class="references">
+<div id="ref-bu06">
+<p>Bühlmann, Peter. 2006. “Boosting for High-Dimensional Linear Models.” <em>The Annals of Statistics</em>, 559–83.</p>
+</div>
+<div id="ref-bu07">
+<p>Bühlmann, Peter, and Torsten Hothorn. 2007. “Boosting Algorithms: Regularization, Prediction and Model Fitting.” <em>Statistical Science</em>, 477–505.</p>
+</div>
+<div id="ref-bu03">
+<p>Bühlmann, Peter, and Bin Yu. 2003. “Boosting with the <span class="math inline">\(L_2\)</span> Loss: Regression and Classification.” <em>Journal of the American Statistical Association</em> 98 (462): 324–39.</p>
+</div>
+<div id="ref-clem08">
+<p>Clémençon, S., G. Lugosi, and N. Vayatis. 2008. “Ranking and Empirical Minimization of U-Statistics.” <em>The Annals of Statistics</em>, 844–74.</p>
+</div>
+<div id="ref-clem08b">
+<p>Clémençon, Stéphan, and Nicolas Vayatis. 2007. “Ranking the Best Instances.” <em>Journal of Machine Learning Research</em> 8 (Dec): 2671–99.</p>
+</div>
+<div id="ref-tutz11a">
+<p>Gertheiss, Jan, Sara Hogger, Cornelia Oberhauser, and Gerhard Tutz. 2011. “Selection of Ordinally Scaled Independent Variables with Applications to International Classification of Functioning Core Sets.” <em>Journal of the Royal Statistical Society: Series C (Applied Statistics)</em> 60 (3): 377–95.</p>
+</div>
+<div id="ref-hofner15">
+<p>Hofner, Benjamin, Luigi Boccuto, and Markus Göker. 2015. “Controlling False Discoveries in High-Dimensional Situations: Boosting with Stability Selection.” <em>BMC Bioinformatics</em> 16 (1): 144.</p>
+</div>
+<div id="ref-stabs">
+<p>Hofner, Benjamin, and Torsten Hothorn. 2017. <em>stabs: Stability Selection with Error Control</em>. <a href="https://CRAN.R-project.org/package=stabs">https://CRAN.R-project.org/package=stabs</a>.</p>
+</div>
+<div id="ref-hofner14">
+<p>Hofner, Benjamin, Andreas Mayr, Nikolay Robinzonov, and Matthias Schmid. 2014. “Model-Based Boosting in R: A Hands-on Tutorial Using the R Package Mboost.” <em>Computational Statistics</em> 29 (1-2): 3–35.</p>
+</div>
+<div id="ref-hothorn06">
+<p>Hothorn, Torsten, and Peter Bühlmann. 2006. “Model-Based Boosting in High Dimensions.” <em>Bioinformatics</em> 22 (22): 2828–9.</p>
+</div>
+<div id="ref-hothorn10">
+<p>Hothorn, Torsten, Peter Bühlmann, Thomas Kneib, Matthias Schmid, and Benjamin Hofner. 2010. “Model-Based Boosting 2.0.” <em>Journal of Machine Learning Research</em> 11 (Aug): 2109–13.</p>
+</div>
+<div id="ref-mboost">
+<p>———. 2017. <em>mboost: Model-Based Boosting</em>. <a href="https://CRAN.R-project.org/package=mboost">https://CRAN.R-project.org/package=mboost</a>.</p>
+</div>
+<div id="ref-bu10">
+<p>Meinshausen, Nicolai, and Peter Bühlmann. 2010. “Stability Selection.” <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em> 72 (4): 417–73.</p>
+</div>
+<div id="ref-TW19b">
+<p>Werner, Tino. 2019a. “A Review on Ranking Problems in Statistical Learning.”</p>
+</div>
+<div id="ref-TWphd">
+<p>———. 2019b. “Gradient-Free Gradient Boosting.” PhD thesis, Carl von Ossietzky Universität Oldenburg.</p>
+</div>
+<div id="ref-TW19c">
+<p>Werner, Tino, and Peter Ruckdeschel. 2019. “The Column Measure and Gradient-Free Gradient Boosting.” <em>Submitted. Available on ArXiv, ArXiv: 1909.10960</em>.</p>
+</div>
+<div id="ref-zhao04">
+<p>Zhao, Peng, and Bin Yu. 2004. “Boosted Lasso.” California University Berkeley Departement of Statistics.</p>
+</div>
+<div id="ref-zhao07">
+<p>———. 2007. “Stagewise Lasso.” <em>Journal of Machine Learning Research</em> 8 (Dec): 2701–26.</p>
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
