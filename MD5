@@ -1,8 +1,8 @@
-da1f04e4c35a83c1bcfc8feb56cb4e6b *DESCRIPTION
+29605a19876dc717e37c530928e9777f *DESCRIPTION
 475eb808f983d8821589787493df4b5a *NAMESPACE
 0f98db203dba03f459f740c01cf5683d *R/CMB.R
 cfaa450b894ffc59f28d211ae97b5cba *R/CMB3S.R
-7a8eca180e344c3c83b09746681a35c8 *R/CMB_Stabsel.R
+ddf7105d2a41caf3a77e99cf2b6e7191 *R/CMB_Stabsel.R
 46f42b57962221d2df5007a2af0d64a9 *R/CMB_stabpath.R
 3d16d1aaf39a9dfdf25519df9175be44 *R/CV_CMB3S.R
 e4015578dadc3a324da323aa20f8c11d *R/LocRank.R
@@ -17,7 +17,7 @@ fc3f70dc55c480553a9b33d220aed2ff *R/random_CVind.R
 e01e7cd0fb65e72db737e9633518572a *R/singboost_plot.R
 0f7dee189438409a9dc716312d405381 *build/vignette.rds
 c61560cabe41786cbf47a2208981f57d *inst/CITATION
-91648f53a42beaf39607333b903df67b *inst/NEWS
+53f23af8b6cb160610a1ec9085e9bf40 *inst/NEWS
 9d0ecc9b0f9fe0c443dd1d23f3b790b8 *inst/doc/Gfboost_vignette.R
 1816b41a1338ca9a69ab8338a1b23e88 *inst/doc/Gfboost_vignette.Rmd
 395450066fdaa62d9a2a9583016c041b *inst/doc/Gfboost_vignette.html

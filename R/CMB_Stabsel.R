@@ -169,7 +169,7 @@ CMB.Stabsel<-function(Dtrain,nsing,Bsing=1,B=100,alpha=1,singfam=Gaussian(),eval
       }
 
       if(min(loss)!=Inf){
-           k.opt<-which.min(loss[k])
+           k.opt<-which.min(loss)
            ## find again the optimal columns according to k.opt
            if(gridtype=='qgrid'){
                 colind.opt<-which(aggnu>=sort(aggnu,decreasing=TRUE)[grid[k.opt]])-1
